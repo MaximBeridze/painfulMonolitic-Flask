@@ -22,6 +22,18 @@ The app runs on `http://localhost:5000`.
 
 ---
 
+## Files
+
+| File            | Description                                              |
+|-----------------|----------------------------------------------------------|
+| `app.py`        | The entire application — routes, logic, DB queries       |
+| `models.py`     | Database schema — all tables and constraints             |
+| `seed.py`       | Populates the database with pre-built data               |
+| `reference.md`  | Page-by-page guide to the UI and what each form does     |
+| `questions.md`  | 10 questions to test your understanding of the system    |
+
+---
+
 ## What's in the app
 
 A web UI is available at `http://localhost:5000` — use it to browse users, games,
@@ -68,7 +80,7 @@ They want it renamed to `display_name` everywhere.
 ### Task 3 — Add an opt-out privacy flag
 
 Users should be able to opt out of activity tracking.
-If a user has opted out, posting to `/activities` should have no effect for them.
+If a user has opted out, logging an activity anywhere in the app should have no effect for them.
 
 ---
 
@@ -87,3 +99,10 @@ It's a simple fix — ship it as fast as you can.
 ---
 
 Good luck.
+
+---
+
+## Resources
+
+- `reference.md` — explains what each page and form does
+- `questions.md` — 10 questions to check your understanding before attempting the tasks
