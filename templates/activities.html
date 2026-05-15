@@ -15,7 +15,7 @@
     <tbody>
         {% for a in activities %}
         <tr>
-            <td><a href="/view/users/{{ a.user_id }}">{{ a.username }}</a></td>
+            <td><a href="/view/users/{{ a.user_id }}">{{ a.display_name }}</a></td>
             <td>{{ a.game_title }}</td>
             <td>{{ a.action }}</td>
             <td>{{ a.created_at }}</td>
@@ -32,7 +32,7 @@
         <select name="user_id" required>
             <option value="" disabled selected>Select a user</option>
             {% for u in users %}
-            <option value="{{ u.id }}">{{ u.username }}</option>
+            <option value="{{ u.id }}">{{ u.display_name }}</option>
             {% endfor %}
         </select>
         <select name="game_id" required>

@@ -7,7 +7,7 @@
     <thead>
         <tr>
             <th>ID</th>
-            <th>Username</th>
+            <th>Display name</th>
             <th>Email</th>
             <th>Bio</th>
             <th>Created</th>
@@ -18,13 +18,13 @@
         {% for user in users %}
         <tr>
             <td>{{ user.id }}</td>
-            <td><a href="/view/users/{{ user.id }}">{{ user.username }}</a></td>
+            <td><a href="/view/users/{{ user.id }}">{{ user.display_name }}</a></td>
             <td>{{ user.email }}</td>
             <td>{{ user.bio }}</td>
             <td>{{ user.created_at }}</td>
             <td>
                 <form class="inline" action="/view/users/{{ user.id }}/delete" method="POST"
-                      onsubmit="return confirm('Delete {{ user.username }}? This cannot be undone.')">
+                      onsubmit="return confirm('Delete {{ user.display_name }}? This cannot be undone.')">
                     <button class="btn btn-danger btn-small" type="submit">Delete</button>
                 </form>
             </td>
@@ -36,9 +36,13 @@
 <div class="card">
     <h2>Add a new user</h2>
     <form action="/view/users" method="POST">
-        <input type="text"  name="username" placeholder="Username" required>
+        <input type="text"  name="display_name" placeholder="Display name" required>
         <input type="email" name="email"    placeholder="Email" required>
         <input type="text"  name="bio"      placeholder="Bio (optional)">
+        <label>
+          <input type="checkbox" name="opted_out" value="1">
+          Opt out of activity tracking
+        </label>
         <button class="btn btn-primary" type="submit">Create user</button>
     </form>
 </div>

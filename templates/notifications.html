@@ -2,7 +2,7 @@
 {% block content %}
 
 <div style="display: flex; justify-content: space-between; align-items: center;">
-    <h1>Notifications for {{ user.username }}</h1>
+    <h1>Notifications for {{ user.display_name }}</h1>
     <a href="/view/users/{{ user.id }}">← Back to profile</a>
 </div>
 
@@ -18,7 +18,7 @@
     <tbody>
         {% for n in notifications %}
         <tr>
-            <td>{{ n.triggered_by_username }}</td>
+            <td>{{ n.triggered_by_display_name }}</td>
             <td>{{ n.message }}</td>
             <td>{{ n.created_at }}</td>
             <td>

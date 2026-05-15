@@ -39,9 +39,10 @@ def get_user(user_id):
 def create_user():
     data = request.json
     conn = get_db()
+    opted_out = 1 if data.get("opted_out") else 0
     conn.execute(
-        "INSERT INTO users (display_name, email, password_hash, bio, created_at) VALUES (?,?,?,?,?)",
-        (data["display_name"], data["email"], data.get("password", "hashed"), data.get("bio", ""), now())
+        "INSERT INTO users (display_name, email, password_hash, bio, created_at, opted_out) VALUES (?,?,?,?,?,?)",
+        (data["display_name"], data["email"], data.get("password", "hashed"), data.get("bio", ""), now(), opted_out)
     )
     conn.commit()
     user = conn.execute("SELECT * FROM users WHERE display_name = ?", (data["display_name"],)).fetchone()
@@ -55,9 +56,10 @@ def update_user(user_id):
     conn = get_db()
     # Note: display_name is used as identifier in activity messages and notifications.
     # Changing it here does NOT update those references — they're stored as plain text.
+    opted_out = 1 if data.get("opted_out") else 0
     conn.execute(
-        "UPDATE users SET display_name = ?, email = ?, bio = ? WHERE id = ?",
-        (data["display_name"], data["email"], data.get("bio", ""), user_id)
+        "UPDATE users SET display_name = ?, email = ?, bio = ?, opted_out = ? WHERE id = ?",
+        (data["display_name"], data["email"], data.get("bio", ""), opted_out, user_id)
     )
     conn.commit()
     user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
@@ -172,6 +174,12 @@ def create_activity():
     data = request.json
     conn = get_db()
 
+    # Check if user has opted out of logging activities before inserting activity
+    user = conn.execute("SELECT * FROM users WHERE id = ?", (data["user_id"],)).fetchone()
+    if user["opted_out"]:
+        conn.close()
+        return jsonify({"error": "User has opted out of logging activities"}), 403
+
     # Insert the activity
     conn.execute(
         "INSERT INTO activities (user_id, game_id, action, created_at) VALUES (?,?,?,?)",
@@ -281,9 +289,10 @@ def view_users():
 @app.route("/view/users", methods=["POST"])
 def view_create_user():
     conn = get_db()
+    opted_out = 1 if request.form.get("opted_out") else 0
     conn.execute(
-        "INSERT INTO users (display_name, email, password_hash, bio, created_at) VALUES (?,?,?,?,?)",
-        (request.form["display_name"], request.form["email"], "hashed", request.form.get("bio", ""), now())
+        "INSERT INTO users (display_name, email, password_hash, bio, created_at, opted_out) VALUES (?,?,?,?,?,?)",
+        (request.form["display_name"], request.form["email"], "hashed", request.form.get("bio", ""), now(), opted_out)
     )
     conn.commit()
     conn.close()
@@ -324,8 +333,8 @@ def view_update_user(user_id):
     # Note: display_name is used as identifier in activity messages and notifications.
     # Changing it here does NOT update those references — they're stored as plain text.
     conn.execute(
-        "UPDATE users SET display_name = ?, email = ?, bio = ? WHERE id = ?",
-        (request.form["display_name"], request.form["email"], request.form.get("bio", ""), user_id)
+        "UPDATE users SET display_name = ?, email = ?, bio = ?, opted_out = ? WHERE id = ?",
+        (request.form["display_name"], request.form["email"], request.form.get("bio", ""), 1 if request.form.get("opted_out") else 0, user_id)
     )
     conn.commit()
     conn.close()
@@ -403,6 +412,11 @@ def view_create_activity():
     user_id = int(request.form["user_id"])
     game_id = int(request.form["game_id"])
     action  = request.form["action"]
+
+    user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    if user["opted_out"]:
+        conn.close()
+        return jsonify({"error": "User has opted out of logging activities"}), 403
 
     conn.execute(
         "INSERT INTO activities (user_id, game_id, action, created_at) VALUES (?,?,?,?)",

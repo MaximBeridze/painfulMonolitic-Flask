@@ -2,9 +2,9 @@
 {% block content %}
 
 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-    <h1>{{ user.username }}</h1>
+    <h1>{{ user.display_name }}</h1>
     <form class="inline" action="/view/users/{{ user.id }}/delete" method="POST"
-          onsubmit="return confirm('Delete {{ user.username }}? This will remove all their data.')">
+          onsubmit="return confirm('Delete {{ user.display_name }}? This will remove all their data.')">
         <button class="btn btn-danger" type="submit">Delete user</button>
     </form>
 </div>
@@ -15,9 +15,13 @@
 <div class="card">
     <h2>Edit profile</h2>
     <form action="/view/users/{{ user.id }}/update" method="POST">
-        <input type="text"  name="username" value="{{ user.username }}" required>
+        <input type="text"  name="display_name" value="{{ user.display_name }}" required>
         <input type="email" name="email"    value="{{ user.email }}"    required>
         <input type="text"  name="bio"      value="{{ user.bio }}">
+        <label>
+            <input type="checkbox" name="opted_out" value="1" {% if user.opted_out %}checked{% endif %}>
+            Opt out of activity tracking
+        </label>
         <button class="btn btn-primary" type="submit">Save changes</button>
     </form>
 </div>
@@ -74,12 +78,12 @@
     {% if friends %}
     <table>
         <thead>
-            <tr><th>Username</th><th>Email</th><th>Notifications</th></tr>
+            <tr><th>Display name</th><th>Email</th><th>Notifications</th></tr>
         </thead>
         <tbody>
             {% for f in friends %}
             <tr>
-                <td><a href="/view/users/{{ f.id }}">{{ f.username }}</a></td>
+                <td><a href="/view/users/{{ f.id }}">{{ f.display_name }}</a></td>
                 <td>{{ f.email }}</td>
                 <td><a href="/view/notifications/{{ f.id }}">view</a></td>
             </tr>
@@ -92,6 +96,6 @@
 </div>
 
 <!-- Notifications link -->
-<p><a href="/view/notifications/{{ user.id }}">View {{ user.username }}'s notifications →</a></p>
+<p><a href="/view/notifications/{{ user.id }}">View {{ user.display_name }}'s notifications →</a></p>
 
 {% endblock %}
