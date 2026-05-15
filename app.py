@@ -4,6 +4,8 @@ from models import init_db, get_db
 
 app = Flask(__name__)
 
+ENABLE_NOTIFICATIONS = False
+
 
 def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -40,9 +42,10 @@ def create_user():
     data = request.json
     conn = get_db()
     opted_out = 1 if data.get("opted_out") else 0
+    notifications = 1 if data.get("notifications", True) else 0
     conn.execute(
-        "INSERT INTO users (display_name, email, password_hash, bio, created_at, opted_out) VALUES (?,?,?,?,?,?)",
-        (data["display_name"], data["email"], data.get("password", "hashed"), data.get("bio", ""), now(), opted_out)
+        "INSERT INTO users (display_name, email, password_hash, bio, created_at, opted_out, notifications) VALUES (?,?,?,?,?,?,?)",
+        (data["display_name"], data["email"], data.get("password", "hashed"), data.get("bio", ""), now(), opted_out, notifications)
     )
     conn.commit()
     user = conn.execute("SELECT * FROM users WHERE display_name = ?", (data["display_name"],)).fetchone()
@@ -57,9 +60,10 @@ def update_user(user_id):
     # Note: display_name is used as identifier in activity messages and notifications.
     # Changing it here does NOT update those references — they're stored as plain text.
     opted_out = 1 if data.get("opted_out") else 0
+    notifications = 1 if data.get("notifications", True) else 0
     conn.execute(
-        "UPDATE users SET display_name = ?, email = ?, bio = ?, opted_out = ? WHERE id = ?",
-        (data["display_name"], data["email"], data.get("bio", ""), opted_out, user_id)
+        "UPDATE users SET display_name = ?, email = ?, bio = ?, opted_out = ?, notifications = ? WHERE id = ?",
+        (data["display_name"], data["email"], data.get("bio", ""), opted_out, notifications, user_id)
     )
     conn.commit()
     user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
@@ -197,16 +201,17 @@ def create_activity():
 
     # Notification logic lives here — because where else would it go?
     # This means you cannot disable notifications without touching this route.
-    friends = conn.execute(
-        "SELECT friend_id FROM friends WHERE user_id = ?", (data["user_id"],)
-    ).fetchall()
+    if ENABLE_NOTIFICATIONS:
+        friends = conn.execute(
+            "SELECT friend_id FROM friends WHERE user_id = ?", (data["user_id"],)
+        ).fetchall()
 
-    for f in friends:
-        msg = f"{actor['display_name']} just {data['action']} playing {game['title']}!"
-        conn.execute(
-            "INSERT INTO notifications (user_id, triggered_by, message, activity_id, created_at) VALUES (?,?,?,?,?)",
-            (f["friend_id"], data["user_id"], msg, activity["id"], now())
-        )
+        for f in friends:
+            msg = f"{actor['display_name']} just {data['action']} playing {game['title']}!"
+            conn.execute(
+                "INSERT INTO notifications (user_id, triggered_by, message, activity_id, created_at) VALUES (?,?,?,?,?)",
+                (f["friend_id"], data["user_id"], msg, activity["id"], now())
+            )
 
     conn.commit()
     conn.close()
@@ -290,9 +295,10 @@ def view_users():
 def view_create_user():
     conn = get_db()
     opted_out = 1 if request.form.get("opted_out") else 0
+    notifications = 1 if request.form.get("notifications") else 0
     conn.execute(
-        "INSERT INTO users (display_name, email, password_hash, bio, created_at, opted_out) VALUES (?,?,?,?,?,?)",
-        (request.form["display_name"], request.form["email"], "hashed", request.form.get("bio", ""), now(), opted_out)
+        "INSERT INTO users (display_name, email, password_hash, bio, created_at, opted_out, notifications) VALUES (?,?,?,?,?,?,?)",
+        (request.form["display_name"], request.form["email"], "hashed", request.form.get("bio", ""), now(), opted_out, notifications)
     )
     conn.commit()
     conn.close()
@@ -332,9 +338,11 @@ def view_update_user(user_id):
     conn = get_db()
     # Note: display_name is used as identifier in activity messages and notifications.
     # Changing it here does NOT update those references — they're stored as plain text.
+    opted_out = 1 if request.form.get("opted_out") else 0
+    notifications = 1 if request.form.get("notifications") else 0
     conn.execute(
-        "UPDATE users SET display_name = ?, email = ?, bio = ?, opted_out = ? WHERE id = ?",
-        (request.form["display_name"], request.form["email"], request.form.get("bio", ""), 1 if request.form.get("opted_out") else 0, user_id)
+        "UPDATE users SET display_name = ?, email = ?, bio = ?, opted_out = ?, notifications = ? WHERE id = ?",
+        (request.form["display_name"], request.form["email"], request.form.get("bio", ""), opted_out, notifications, user_id)
     )
     conn.commit()
     conn.close()
@@ -446,13 +454,14 @@ def view_create_activity():
     game  = conn.execute("SELECT title FROM games WHERE id = ?", (game_id,)).fetchone()
 
     # Notification logic lives here — because where else would it go?
-    friends = conn.execute("SELECT friend_id FROM friends WHERE user_id = ?", (user_id,)).fetchall()
-    for f in friends:
-        msg = f"{actor['display_name']} just {action} playing {game['title']}!"
-        conn.execute(
-            "INSERT INTO notifications (user_id, triggered_by, message, activity_id, created_at) VALUES (?,?,?,?,?)",
-            (f["friend_id"], user_id, msg, activity["id"], now())
-        )
+    if ENABLE_NOTIFICATIONS:
+        friends = conn.execute("SELECT friend_id FROM friends WHERE user_id = ?", (user_id,)).fetchall()
+        for f in friends:
+            msg = f"{actor['display_name']} just {action} playing {game['title']}!"
+            conn.execute(
+                "INSERT INTO notifications (user_id, triggered_by, message, activity_id, created_at) VALUES (?,?,?,?,?)",
+                (f["friend_id"], user_id, msg, activity["id"], now())
+            )
 
     conn.commit()
     conn.close()

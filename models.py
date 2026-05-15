@@ -23,7 +23,8 @@ def init_db():
             password_hash TEXT NOT NULL,
             bio           TEXT,
             created_at    TEXT NOT NULL,
-            opted_out     BOOL DEFAULT 0
+            opted_out     BOOL DEFAULT 0,
+            notifications BOOL DEFAULT 1
         );
 
         CREATE TABLE IF NOT EXISTS games (

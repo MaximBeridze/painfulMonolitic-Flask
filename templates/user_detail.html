@@ -22,6 +22,10 @@
             <input type="checkbox" name="opted_out" value="1" {% if user.opted_out %}checked{% endif %}>
             Opt out of activity tracking
         </label><br><br>
+        <label>
+            <input type="checkbox" name="notifications" value="1" {% if user.notifications %}checked{% endif %}>
+            Enable notifications
+        </label><br><br>
         <button class="btn btn-primary" type="submit">Save changes</button>
     </form>
 </div>

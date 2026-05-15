@@ -17,14 +17,14 @@ def seed():
     # Users — canonical GameHub users, reused across all course materials
     # -------------------------------------------------------------------------
     users = [
-        ("nova",        "nova@gamehub.io",    FAKE_HASH, "Explorer of virtual worlds.",      ts(1), 0),
-        ("alex_g",      "alex@gamehub.io",    FAKE_HASH, "Speedrunner. Coffee addict.",       ts(2), 0),
-        ("maya_r",      "maya@gamehub.io",    FAKE_HASH, "RPG lover, lore hunter.",           ts(3), 0),
-        ("thunderbyte", "thunder@gamehub.io", FAKE_HASH, "FPS main, occasional cozy gamer.",  ts(4), 0),
-        ("pixel_queen", "pixel@gamehub.io",   FAKE_HASH, "Completionist. 100% or nothing.",   ts(5), 0),
+        ("nova",        "nova@gamehub.io",    FAKE_HASH, "Explorer of virtual worlds.",      ts(1), 0, 1),
+        ("alex_g",      "alex@gamehub.io",    FAKE_HASH, "Speedrunner. Coffee addict.",       ts(2), 0, 1),
+        ("maya_r",      "maya@gamehub.io",    FAKE_HASH, "RPG lover, lore hunter.",           ts(3), 0, 1),
+        ("thunderbyte", "thunder@gamehub.io", FAKE_HASH, "FPS main, occasional cozy gamer.",  ts(4), 0, 1),
+        ("pixel_queen", "pixel@gamehub.io",   FAKE_HASH, "Completionist. 100% or nothing.",   ts(5), 0, 1),
     ]
     c.executemany(
-        "INSERT INTO users (display_name, email, password_hash, bio, created_at, opted_out) VALUES (?,?,?,?,?,?)",
+        "INSERT INTO users (display_name, email, password_hash, bio, created_at, opted_out, notifications) VALUES (?,?,?,?,?,?,?)",
         users
     )
 
