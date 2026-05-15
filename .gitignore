@@ -2,3 +2,17 @@ PLAN.md
 
 *.db
 *.db-journal
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# Environment files
+.env
+.env.*

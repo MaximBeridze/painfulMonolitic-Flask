@@ -40,11 +40,11 @@ def create_user():
     data = request.json
     conn = get_db()
     conn.execute(
-        "INSERT INTO users (username, email, password_hash, bio, created_at) VALUES (?,?,?,?,?)",
-        (data["username"], data["email"], data.get("password", "hashed"), data.get("bio", ""), now())
+        "INSERT INTO users (display_name, email, password_hash, bio, created_at) VALUES (?,?,?,?,?)",
+        (data["display_name"], data["email"], data.get("password", "hashed"), data.get("bio", ""), now())
     )
     conn.commit()
-    user = conn.execute("SELECT * FROM users WHERE username = ?", (data["username"],)).fetchone()
+    user = conn.execute("SELECT * FROM users WHERE display_name = ?", (data["display_name"],)).fetchone()
     conn.close()
     return jsonify(dict(user)), 201
 
@@ -53,11 +53,11 @@ def create_user():
 def update_user(user_id):
     data = request.json
     conn = get_db()
-    # Note: username is used as identifier in activity messages and notifications.
+    # Note: display_name is used as identifier in activity messages and notifications.
     # Changing it here does NOT update those references — they're stored as plain text.
     conn.execute(
-        "UPDATE users SET username = ?, email = ?, bio = ? WHERE id = ?",
-        (data["username"], data["email"], data.get("bio", ""), user_id)
+        "UPDATE users SET display_name = ?, email = ?, bio = ? WHERE id = ?",
+        (data["display_name"], data["email"], data.get("bio", ""), user_id)
     )
     conn.commit()
     user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
@@ -157,7 +157,7 @@ def update_game(game_id):
 def list_activities():
     conn = get_db()
     rows = conn.execute("""
-        SELECT a.*, u.username, g.title as game_title
+        SELECT a.*, u.display_name, g.title as game_title
         FROM activities a
         JOIN users u ON a.user_id = u.id
         JOIN games g ON a.game_id = g.id
@@ -184,7 +184,7 @@ def create_activity():
         (data["user_id"],)
     ).fetchone()
 
-    actor = conn.execute("SELECT username FROM users WHERE id = ?", (data["user_id"],)).fetchone()
+    actor = conn.execute("SELECT display_name FROM users WHERE id = ?", (data["user_id"],)).fetchone()
     game  = conn.execute("SELECT title FROM games WHERE id = ?", (data["game_id"],)).fetchone()
 
     # Notification logic lives here — because where else would it go?
@@ -194,7 +194,7 @@ def create_activity():
     ).fetchall()
 
     for f in friends:
-        msg = f"{actor['username']} just {data['action']} playing {game['title']}!"
+        msg = f"{actor['display_name']} just {data['action']} playing {game['title']}!"
         conn.execute(
             "INSERT INTO notifications (user_id, triggered_by, message, activity_id, created_at) VALUES (?,?,?,?,?)",
             (f["friend_id"], data["user_id"], msg, activity["id"], now())
@@ -213,7 +213,7 @@ def create_activity():
 def get_notifications(user_id):
     conn = get_db()
     rows = conn.execute("""
-        SELECT n.*, u.username as triggered_by_username
+        SELECT n.*, u.display_name as triggered_by_display_name
         FROM notifications n
         JOIN users u ON n.triggered_by = u.id
         WHERE n.user_id = ?
@@ -240,7 +240,7 @@ def delete_notification(notif_id):
 def get_friends(user_id):
     conn = get_db()
     rows = conn.execute("""
-        SELECT u.id, u.username, u.email, u.bio
+        SELECT u.id, u.display_name, u.email, u.bio
         FROM friends f
         JOIN users u ON f.friend_id = u.id
         WHERE f.user_id = ?
@@ -282,8 +282,8 @@ def view_users():
 def view_create_user():
     conn = get_db()
     conn.execute(
-        "INSERT INTO users (username, email, password_hash, bio, created_at) VALUES (?,?,?,?,?)",
-        (request.form["username"], request.form["email"], "hashed", request.form.get("bio", ""), now())
+        "INSERT INTO users (display_name, email, password_hash, bio, created_at) VALUES (?,?,?,?,?)",
+        (request.form["display_name"], request.form["email"], "hashed", request.form.get("bio", ""), now())
     )
     conn.commit()
     conn.close()
@@ -321,11 +321,11 @@ def view_user_detail(user_id):
 @app.route("/view/users/<int:user_id>/update", methods=["POST"])
 def view_update_user(user_id):
     conn = get_db()
-    # Note: username is used as identifier in activity messages and notifications.
+    # Note: display_name is used as identifier in activity messages and notifications.
     # Changing it here does NOT update those references — they're stored as plain text.
     conn.execute(
-        "UPDATE users SET username = ?, email = ?, bio = ? WHERE id = ?",
-        (request.form["username"], request.form["email"], request.form.get("bio", ""), user_id)
+        "UPDATE users SET display_name = ?, email = ?, bio = ? WHERE id = ?",
+        (request.form["display_name"], request.form["email"], request.form.get("bio", ""), user_id)
     )
     conn.commit()
     conn.close()
@@ -385,7 +385,7 @@ def view_update_game(game_id):
 def view_activities():
     conn = get_db()
     rows = conn.execute("""
-        SELECT a.*, u.username, g.title as game_title
+        SELECT a.*, u.display_name, g.title as game_title
         FROM activities a
         JOIN users u ON a.user_id = u.id
         JOIN games g ON a.game_id = g.id
@@ -413,13 +413,13 @@ def view_create_activity():
     activity = conn.execute(
         "SELECT * FROM activities WHERE user_id = ? ORDER BY id DESC LIMIT 1", (user_id,)
     ).fetchone()
-    actor = conn.execute("SELECT username FROM users WHERE id = ?", (user_id,)).fetchone()
+    actor = conn.execute("SELECT display_name FROM users WHERE id = ?", (user_id,)).fetchone()
     game  = conn.execute("SELECT title FROM games WHERE id = ?", (game_id,)).fetchone()
 
     # Notification logic lives here — because where else would it go?
     friends = conn.execute("SELECT friend_id FROM friends WHERE user_id = ?", (user_id,)).fetchall()
     for f in friends:
-        msg = f"{actor['username']} just {action} playing {game['title']}!"
+        msg = f"{actor['display_name']} just {action} playing {game['title']}!"
         conn.execute(
             "INSERT INTO notifications (user_id, triggered_by, message, activity_id, created_at) VALUES (?,?,?,?,?)",
             (f["friend_id"], user_id, msg, activity["id"], now())
@@ -435,7 +435,7 @@ def view_notifications(user_id):
     conn = get_db()
     user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     rows = conn.execute("""
-        SELECT n.*, u.username as triggered_by_username
+        SELECT n.*, u.display_name as triggered_by_display_name
         FROM notifications n
         JOIN users u ON n.triggered_by = u.id
         WHERE n.user_id = ?
