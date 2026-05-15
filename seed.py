@@ -18,7 +18,6 @@ def seed():
     # -------------------------------------------------------------------------
     users = [
         ("nova",        "nova@gamehub.io",    FAKE_HASH, "Explorer of virtual worlds.",      ts(1), 0, 1),
-        ("alex_g",      "alex@gamehub.io",    FAKE_HASH, "Speedrunner. Coffee addict.",       ts(2), 0, 1),
         ("maya_r",      "maya@gamehub.io",    FAKE_HASH, "RPG lover, lore hunter.",           ts(3), 0, 1),
         ("thunderbyte", "thunder@gamehub.io", FAKE_HASH, "FPS main, occasional cozy gamer.",  ts(4), 0, 1),
         ("pixel_queen", "pixel@gamehub.io",   FAKE_HASH, "Completionist. 100% or nothing.",   ts(5), 0, 1),
@@ -53,7 +52,6 @@ def seed():
     games_db = {row["title"]: row["id"] for row in c.execute("SELECT id, title FROM games")}
 
     nova        = users_db["nova"]
-    alex        = users_db["alex_g"]
     maya        = users_db["maya_r"]
     thunder     = users_db["thunderbyte"]
     pixel       = users_db["pixel_queen"]
@@ -74,7 +72,6 @@ def seed():
         "INSERT INTO user_games (user_id, game_id, hours_played) VALUES (?,?,?)",
         [
             (nova,    hk,    42),  (nova,    cel,  18),  (nova,    ow,   31),
-            (alex,    hk,   120),  (alex,    dc,   88),  (alex,    cel,  55),
             (maya,    disco, 74),  (maya,    sdv,  200), (maya,    ori,  22),
             (thunder, hades, 60),  (thunder, dc,   45),  (thunder, hk,   10),
             (pixel,   cel,  300),  (pixel,   hk,  250),  (pixel,   hades,90),
@@ -83,12 +80,10 @@ def seed():
 
     # -------------------------------------------------------------------------
     # friends — a web, not isolated pairs
-    # nova <-> alex, nova <-> maya, alex <-> thunder, maya <-> pixel, thunder <-> pixel, pixel <-> nova
+    # nova <-> maya, maya <-> pixel, thunder <-> pixel, pixel <-> nova
     # -------------------------------------------------------------------------
     friendships = [
-        (nova, alex),    (alex, nova),
         (nova, maya),    (maya, nova),
-        (alex, thunder), (thunder, alex),
         (maya, pixel),   (pixel, maya),
         (thunder, pixel),(pixel, thunder),
         (pixel, nova),   (nova, pixel),
@@ -102,9 +97,6 @@ def seed():
         (nova,    hk,    "started",   ts(10)),
         (nova,    cel,   "completed", ts(11)),
         (nova,    ow,    "started",   ts(12)),
-        (alex,    hk,    "completed", ts(10)),
-        (alex,    dc,    "started",   ts(11)),
-        (alex,    cel,   "started",   ts(13)),
         (maya,    disco, "started",   ts(10)),
         (maya,    sdv,   "completed", ts(12)),
         (maya,    ori,   "started",   ts(14)),
