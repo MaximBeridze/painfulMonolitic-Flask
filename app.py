@@ -403,7 +403,7 @@ def view_activities():
     users = conn.execute("SELECT * FROM users").fetchall()
     games = conn.execute("SELECT * FROM games").fetchall()
     conn.close()
-    return render_template("activities.html", activities=rows, users=users, games=games)
+    return render_template("activities.html", activities=rows, users=users, games=games, error=None)
 
 
 @app.route("/view/activities", methods=["POST"])
@@ -415,8 +415,23 @@ def view_create_activity():
 
     user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     if user["opted_out"]:
+        rows = conn.execute("""
+            SELECT a.*, u.display_name, g.title as game_title
+            FROM activities a
+            JOIN users u ON a.user_id = u.id
+            JOIN games g ON a.game_id = g.id
+            ORDER BY a.created_at DESC
+        """).fetchall()
+        users = conn.execute("SELECT * FROM users").fetchall()
+        games = conn.execute("SELECT * FROM games").fetchall()
         conn.close()
-        return jsonify({"error": "User has opted out of logging activities"}), 403
+        return render_template(
+            "activities.html",
+            activities=rows,
+            users=users,
+            games=games,
+            error="This user has opted out of activity tracking."
+        )
 
     conn.execute(
         "INSERT INTO activities (user_id, game_id, action, created_at) VALUES (?,?,?,?)",
